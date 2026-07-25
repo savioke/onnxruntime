@@ -1,0 +1,113 @@
+name: Build Ubuntu Debian packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "ubuntu-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Ubuntu ${{ matrix.ubuntu }} / ONNX Runtime ${{ matrix.ort_version }}
+    runs-on: ubuntu-22.04
+    container: ubuntu:${{ matrix.ubuntu }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ubuntu: "20.04"
+            codename: focal
+            ort_version: "1.21.1"
+          - ubuntu: "22.04"
+            codename: jammy
+            ort_version: "1.27.1"
+          - ubuntu: "24.04"
+            codename: noble
+            ort_version: "1.27.1"
+
+    steps:
+      - name: Install bootstrap tools
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          chmod 1777 /tmp
+          apt-get update
+          apt-get install --yes --no-install-recommends \
+            ca-certificates \
+            devscripts \
+            git \
+            libdistro-info-perl \
+            python3 \
+            python3-pip \
+            python3-venv
+
+      - name: Check out package recipe
+        uses: actions/checkout@v4
+        with:
+          path: packaging
+
+      - name: Check out ONNX Runtime release
+        uses: actions/checkout@v4
+        with:
+          repository: microsoft/onnxruntime
+          ref: v${{ matrix.ort_version }}
+          path: source
+
+      - name: Install package build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get install --yes --no-install-recommends \
+            build-essential \
+            debhelper \
+            fakeroot \
+            ninja-build \
+            pkg-config \
+            python3-packaging
+          python3 -m venv /tmp/onnxruntime-package-venv
+          /tmp/onnxruntime-package-venv/bin/python -m pip install \
+            cmake==3.31.6 \
+            ninja==1.11.1.4 \
+            packaging==24.2
+          echo "/tmp/onnxruntime-package-venv/bin" >> "$GITHUB_PATH"
+
+      - name: Prepare package metadata
+        env:
+          DEBEMAIL: onnxruntime-ubuntu-packaging@users.noreply.github.com
+          DEBFULLNAME: ONNX Runtime Ubuntu Packaging
+          ORT_VERSION: ${{ matrix.ort_version }}
+          UBUNTU_VERSION: ${{ matrix.ubuntu }}
+          UBUNTU_CODENAME: ${{ matrix.codename }}
+        run: |
+          cp -a packaging/debian source/debian
+          if [ "$UBUNTU_CODENAME" = focal ]; then
+            cp source/debian/patches/series.focal source/debian/patches/series
+          fi
+          cd source
+          dch --force-bad-version \
+            --distribution "$UBUNTU_CODENAME" \
+            --newversion "${ORT_VERSION}-1~ubuntu${UBUNTU_VERSION}.1" \
+            "Build CPU runtime and development packages for Ubuntu ${UBUNTU_VERSION}."
+
+      - name: Build packages
+        env:
+          DEB_BUILD_OPTIONS: parallel=2
+        working-directory: source
+        run: dpkg-buildpackage --build=binary --no-sign --no-check-builddeps
+
+      - name: Install and smoke-test packages
+        run: |
+          mkdir -p artifacts
+          mv ./*.deb artifacts/
+          apt-get install --yes ./artifacts/libonnxruntime1_*.deb ./artifacts/libonnxruntime-dev_*.deb
+          packaging/debian/tests/build
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnxruntime-${{ matrix.ort_version }}-ubuntu-${{ matrix.ubuntu }}-amd64
+          path: artifacts/*.deb
+          if-no-files-found: error

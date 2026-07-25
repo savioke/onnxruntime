@@ -1,0 +1,6 @@
+onnxruntime (0.0.0-1) UNRELEASED; urgency=medium
+
+  * Add a template changelog for Ubuntu package builds. The GitHub Actions
+    workflow replaces this version with the selected upstream release.
+
+ -- ONNX Runtime Ubuntu Packaging <onnxruntime-ubuntu-packaging@users.noreply.github.com>  Fri, 24 Jul 2026 00:00:00 -0500

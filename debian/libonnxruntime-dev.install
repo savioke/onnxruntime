@@ -1,0 +1,4 @@
+usr/include/
+usr/lib/*/libonnxruntime.so
+usr/lib/*/cmake/
+usr/lib/*/pkgconfig/

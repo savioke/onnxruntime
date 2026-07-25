@@ -1,0 +1,2 @@
+usr/lib/*/libonnxruntime.so.*
+usr/lib/*/libonnxruntime_providers_shared.so

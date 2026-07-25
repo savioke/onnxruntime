@@ -1,0 +1,39 @@
+Source: onnxruntime
+Section: science
+Priority: optional
+Maintainer: ONNX Runtime Ubuntu Packaging <onnxruntime-ubuntu-packaging@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 12),
+               ca-certificates,
+               cmake,
+               git,
+               ninja-build,
+               pkg-config,
+               python3,
+               python3-packaging
+Standards-Version: 4.5.0
+Rules-Requires-Root: no
+Homepage: https://onnxruntime.ai/
+Vcs-Browser: https://github.com/microsoft/onnxruntime
+
+Package: libonnxruntime1
+Architecture: any
+Multi-Arch: same
+Section: libs
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: cross-platform machine-learning inference engine
+ ONNX Runtime is a performance-focused engine for running models in the Open
+ Neural Network Exchange (ONNX) format.
+ .
+ This package contains the CPU runtime shared library.
+
+Package: libonnxruntime-dev
+Architecture: any
+Multi-Arch: same
+Section: libdevel
+Depends: libonnxruntime1 (= ${binary:Version}), ${misc:Depends}
+Description: development files for ONNX Runtime
+ ONNX Runtime is a performance-focused engine for running models in the Open
+ Neural Network Exchange (ONNX) format.
+ .
+ This package contains the C and C++ headers, unversioned linker name,
+ pkg-config metadata, and CMake package metadata.
