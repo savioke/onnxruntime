@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -eu
+
+test_dir=$(unset CDPATH; cd -- "$(dirname -- "$0")" && pwd)
+
+if [ -n "${DEB_HOST_GNU_TYPE:-}" ]; then
+  cross_compile="${DEB_HOST_GNU_TYPE}-"
+else
+  cross_compile=""
+fi
+
+# pkg-config output is deliberately word-split into compiler arguments.
+# shellcheck disable=SC2046
+"${cross_compile}gcc" -o libonnxruntime_test "$test_dir/version.c" \
+  $("${cross_compile}pkg-config" --cflags --libs libonnxruntime)
+./libonnxruntime_test

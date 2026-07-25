@@ -98,14 +98,18 @@ jobs:
         working-directory: source
         run: dpkg-buildpackage --build=binary --no-sign --no-check-builddeps
 
-      - name: Install and smoke-test packages
+      - name: Collect packages
         run: |
           mkdir -p artifacts
           mv ./*.deb artifacts/
+
+      - name: Install and smoke-test packages
+        run: |
           apt-get install --yes ./artifacts/libonnxruntime1_*.deb ./artifacts/libonnxruntime-dev_*.deb
-          packaging/debian/tests/build
+          source/debian/tests/build
 
       - name: Upload packages
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: onnxruntime-${{ matrix.ort_version }}-ubuntu-${{ matrix.ubuntu }}-amd64

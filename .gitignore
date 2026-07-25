@@ -1,6 +1,7 @@
 # build, distribute, and bins (+ python proto bindings)
 build.*/
 build
+!debian/tests/build
 build_*/
 .build_debug/*
 .build_release/*
