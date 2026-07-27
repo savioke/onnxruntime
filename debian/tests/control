@@ -1,3 +1,6 @@
 Tests: build
 Depends: @, build-essential, pkgconf
 Restrictions: superficial
+
+Tests: python
+Depends: python3-numpy, python3-onnxruntime

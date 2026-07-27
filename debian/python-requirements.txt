@@ -1,0 +1,8 @@
+# Ubuntu LTS releases carry older, security-maintained Python dependencies.
+# Build and test against those distribution versions instead of importing the
+# version floors used for upstream PyPI wheels.
+coloredlogs
+numpy
+packaging
+protobuf
+sympy

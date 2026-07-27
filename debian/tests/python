@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+
+import numpy as np
+import onnxruntime as ort
+from onnxruntime.datasets import get_example
+
+
+assert "CPUExecutionProvider" in ort.get_available_providers()
+
+session = ort.InferenceSession(get_example("mul_1.onnx"), providers=["CPUExecutionProvider"])
+input_name = session.get_inputs()[0].name
+input_value = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], dtype=np.float32)
+output = session.run(None, {input_name: input_value})[0]
+np.testing.assert_allclose(output, input_value * input_value)
+
+print(f"onnxruntime {ort.__version__}: Python inference smoke test passed")

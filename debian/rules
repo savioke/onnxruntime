@@ -6,6 +6,8 @@ include /usr/share/dpkg/buildflags.mk
 
 BUILD_DIR := $(CURDIR)/obj-$(DEB_HOST_GNU_TYPE)
 CONFIG_DIR := $(BUILD_DIR)/Release
+FULLVERSION := $(shell sed -n '1p' VERSION_NUMBER)
+PYTHON_CAPI_DIR := usr/lib/python3/dist-packages/onnxruntime/capi
 PARALLEL_JOBS := $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 ifeq ($(PARALLEL_JOBS),)
 PARALLEL_JOBS := 2
@@ -15,6 +17,7 @@ COMMON_BUILD_ARGS := \
 	--config Release \
 	--build_dir $(BUILD_DIR) \
 	--build_shared_lib \
+	--enable_pybind \
 	--skip_tests \
 	--parallel $(PARALLEL_JOBS) \
 	--allow_running_as_root \
@@ -22,7 +25,7 @@ COMMON_BUILD_ARGS := \
 	--compile_no_warning_as_error
 
 %:
-	dh $@ --buildsystem=cmake --sourcedirectory=cmake --builddirectory=$(CONFIG_DIR)
+	dh $@ --with python3 --buildsystem=cmake --sourcedirectory=cmake --builddirectory=$(CONFIG_DIR)
 
 override_dh_auto_configure:
 	python3 tools/ci_build/build.py \
@@ -35,6 +38,8 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	python3 tools/ci_build/build.py $(COMMON_BUILD_ARGS) --build
+	cp debian/python-requirements.txt $(CONFIG_DIR)/requirements.txt
+	cd $(CONFIG_DIR) && /usr/bin/python3 $(CURDIR)/setup.py build
 
 override_dh_auto_test:
 	# The installed C API and dynamic loader are exercised by debian/tests/build.
@@ -42,3 +47,21 @@ override_dh_auto_test:
 override_dh_auto_install:
 	DESTDIR=$(CURDIR)/debian/tmp cmake --install $(CONFIG_DIR) --config Release
 	$(RM) $(CURDIR)/debian/tmp/usr/bin/onnx_test_runner
+	cd $(CONFIG_DIR) && /usr/bin/python3 $(CURDIR)/setup.py install \
+		--root=$(CURDIR)/debian/tmp \
+		--prefix=/usr \
+		--install-layout=deb \
+		--single-version-externally-managed \
+		--record=$(BUILD_DIR)/python-install-files.txt \
+		--skip-build
+
+execute_after_dh_link:
+	dh_link -ppython3-onnxruntime \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libonnxruntime.so.1 $(PYTHON_CAPI_DIR)/libonnxruntime.so.1 \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libonnxruntime.so.$(FULLVERSION) $(PYTHON_CAPI_DIR)/libonnxruntime.so.$(FULLVERSION) \
+		usr/lib/$(DEB_HOST_MULTIARCH)/libonnxruntime_providers_shared.so $(PYTHON_CAPI_DIR)/libonnxruntime_providers_shared.so
+
+override_dh_python3:
+	dh_python3
+	# dh_python3 mistakes provider libraries for Python extension modules.
+	-find debian/python3-onnxruntime -type f -name 'libonnxruntime_providers_*.so*' -delete

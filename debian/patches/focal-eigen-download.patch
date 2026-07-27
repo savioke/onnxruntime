@@ -1,11 +1,11 @@
 Description: Fetch the pinned Eigen commit from the stable GitHub mirror
- ONNX Runtime 1.21.1 records the SHA-1 of a GitLab-generated archive. GitLab
+ ONNX Runtime 1.19.2 records the SHA-1 of a GitLab-generated archive. GitLab
  now generates different archive bytes for that unchanged commit, causing the
  configure step to fail its integrity check. Keep the exact upstream commit
  and use Eigen's GitHub mirror with its corresponding archive checksum.
 Author: ONNX Runtime Ubuntu Packaging <onnxruntime-ubuntu-packaging@users.noreply.github.com>
 Forwarded: not-needed
-Last-Update: 2026-07-24
+Last-Update: 2026-07-27
 ---
 --- a/cmake/deps.txt
 +++ b/cmake/deps.txt
@@ -13,8 +13,8 @@ Last-Update: 2026-07-24
  # it contains changes on top of 3.4.0 which are required to fix build issues.
  # Until the 3.4.1 release this is the best option we have.
  # Issue link: https://gitlab.com/libeigen/eigen/-/issues/2744
--eigen;https://gitlab.com/libeigen/eigen/-/archive/1d8b82b0740839c0de7f1242a3585e3390ff5f33/eigen-1d8b82b0740839c0de7f1242a3585e3390ff5f33.zip;5ea4d05e62d7f954a46b3213f9b2535bdd866803
-+eigen;https://github.com/eigenteam/eigen-git-mirror/archive/1d8b82b0740839c0de7f1242a3585e3390ff5f33.zip;8921d200928c27a0f3533fec4470630f06c33c84
+-eigen;https://gitlab.com/libeigen/eigen/-/archive/e7248b26a1ed53fa030c5c459f7ea095dfd276ac/eigen-e7248b26a1ed53fa030c5c459f7ea095dfd276ac.zip;be8be39fdbc6e60e94fa7870b280707069b5b81a
++eigen;https://github.com/eigenteam/eigen-git-mirror/archive/e7248b26a1ed53fa030c5c459f7ea095dfd276ac.zip;ca78943c7e45fa6fe31de288306e9e51a5eee60f
  flatbuffers;https://github.com/google/flatbuffers/archive/refs/tags/v23.5.26.zip;59422c3b5e573dd192fead2834d25951f1c1670c
  fp16;https://github.com/Maratyszcza/FP16/archive/0a92994d729ff76a58f692d3028ca1b64b145d91.zip;b985f6985a05a1c03ff1bb71190f66d8f98a1494
  fxdiv;https://github.com/Maratyszcza/FXdiv/archive/63058eff77e11aa15bf531df5dd34395ec3017c8.zip;a5658f4036402dbca7cebee32be57fb8149811e1

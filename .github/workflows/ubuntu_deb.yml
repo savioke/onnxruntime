@@ -20,13 +20,13 @@ jobs:
         include:
           - ubuntu: "20.04"
             codename: focal
-            ort_version: "1.21.1"
+            ort_version: "1.19.2"
           - ubuntu: "22.04"
             codename: jammy
-            ort_version: "1.27.1"
+            ort_version: "1.23.2"
           - ubuntu: "24.04"
             codename: noble
-            ort_version: "1.27.1"
+            ort_version: "1.28.0"
 
     steps:
       - name: Install bootstrap tools
@@ -63,11 +63,22 @@ jobs:
           apt-get install --yes --no-install-recommends \
             build-essential \
             debhelper \
+            dh-python \
             fakeroot \
             ninja-build \
             pkg-config \
-            python3-packaging
-          python3 -m venv /tmp/onnxruntime-package-venv
+            python3-coloredlogs \
+            python3-dev \
+            python3-numpy \
+            python3-packaging \
+            python3-protobuf \
+            python3-setuptools \
+            python3-sympy \
+            python3-wheel
+          if apt-cache show python3-flatbuffers >/dev/null 2>&1; then
+            apt-get install --yes --no-install-recommends python3-flatbuffers
+          fi
+          python3 -m venv --system-site-packages /tmp/onnxruntime-package-venv
           /tmp/onnxruntime-package-venv/bin/python -m pip install \
             cmake==3.31.6 \
             ninja==1.11.1.4 \
@@ -90,7 +101,7 @@ jobs:
           dch --force-bad-version \
             --distribution "$UBUNTU_CODENAME" \
             --newversion "${ORT_VERSION}-1~ubuntu${UBUNTU_VERSION}.1" \
-            "Build CPU runtime and development packages for Ubuntu ${UBUNTU_VERSION}."
+            "Build CPU runtime, development, and Python packages for Ubuntu ${UBUNTU_VERSION}."
 
       - name: Build packages
         env:
@@ -105,8 +116,13 @@ jobs:
 
       - name: Install and smoke-test packages
         run: |
-          apt-get install --yes ./artifacts/libonnxruntime1_*.deb ./artifacts/libonnxruntime-dev_*.deb
+          apt-get install --yes \
+            ./artifacts/libonnxruntime1_*.deb \
+            ./artifacts/libonnxruntime-dev_*.deb \
+            ./artifacts/python3-onnxruntime_*.deb \
+            ./artifacts/onnxruntime-tools_*.deb
           source/debian/tests/build
+          source/debian/tests/python
 
       - name: Upload packages
         if: ${{ !cancelled() }}
